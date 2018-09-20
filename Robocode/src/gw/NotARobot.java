@@ -49,7 +49,7 @@ public class NotARobot extends AdvancedRobot
      */
     public void onScannedRobot(ScannedRobotEvent e) {
         /* For effect only, doing this every turn could cause seizures. This makes it change every 32 turns. */
-        if(e.getTime() % 32 == 0) {
+        if(e.getTime() % 10 == 0) {
             /* Set some crazy colors! */
             setBodyColor(new Color((float)Math.random(),(float)Math.random(),(float)Math.random()));
             setGunColor(new Color((float)Math.random(),(float)Math.random(),(float)Math.random()));
