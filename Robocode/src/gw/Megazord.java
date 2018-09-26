@@ -3,11 +3,17 @@ package gw;
 import robocode.*;
 import robocode.util.Utils;
 import java.awt.geom.*;
+import java.util.ArrayList;
 
 import java.util.*;
 
 public class Megazord extends AdvancedRobot
 {
+    public Movement mover;
+
+    public static double _oppEnergy = 100.0;
+
+
     List<WaveBullet> waves = new ArrayList<WaveBullet>();
 
     static int[][] stats = new int[13][31]; // onScannedRobot can scan up to 1200px, so there are only 13.
@@ -15,24 +21,25 @@ public class Megazord extends AdvancedRobot
 
     public void run()
     {
+        mover = new Movement(this);
+
+        ;
         setAdjustGunForRobotTurn(true);
         setAdjustRadarForGunTurn(true);
-        setTurnRadarRight(Double.POSITIVE_INFINITY);
 
         while (true)
         {
-            ahead(100);
-            turnGunRight(360);
-            back(100);
-            turnGunRight(360);
+            // ...
+            // Turn the radar if we have no more turn, starts it if it stops and at the start of round
+            if ( getRadarTurnRemaining() == 0.0 )
+                setTurnRadarRightRadians( Double.POSITIVE_INFINITY );
+
+            execute();
         }
     }
 
-    public void onScannedRobot(ScannedRobotEvent e)
+    public void doTargeting (ScannedRobotEvent e)
     {
-        setTurnRadarRight(2.0 * Utils.normalRelativeAngleDegrees(getHeading() + e.getBearing() - getRadarHeading()));
-        fire(1);
-
         // Enemy absolute bearing, you can use your one if you already declare it.
         double absBearing = getHeadingRadians() + e.getBearingRadians();
 
@@ -79,9 +86,45 @@ public class Megazord extends AdvancedRobot
                 absBearing - getGunHeadingRadians() + angleOffset);
         setTurnGunRightRadians(gunAdjust);
 
-        if (getGunHeat() == 0 && gunAdjust < Math.atan2(9, e.getDistance()) && setFireBullet(power) != null)
+        if (getGunHeat() == 0 && /*&& gunAdjust < Math.atan2(9, e.getDistance()) &&*/ setFireBullet(power) != null)
         {
             waves.add(newWave);
         }
+    }
+
+
+    public void onHitByBullet(HitByBulletEvent e)
+    {
+        mover.onHitByBullet(e);
+    }
+
+    public void onScannedRobot(ScannedRobotEvent e)
+    {
+        // Absolute angle towards target
+        double angleToEnemy = getHeadingRadians() + e.getBearingRadians();
+
+        // Subtract current radar heading to get the turn required to face the enemy, be sure it is normalized
+        double radarTurn = Utils.normalRelativeAngle( angleToEnemy - getRadarHeadingRadians() );
+
+        // Distance we want to scan from middle of enemy to either side
+        // The 36.0 is how many units from the center of the enemy robot it scans.
+        double extraTurn = Math.min( Math.atan( 36.0 / e.getDistance() ), Rules.RADAR_TURN_RATE_RADIANS );
+
+        // Adjust the radar turn so it goes that much further in the direction it is going to turn
+        // Basically if we were going to turn it left, turn it even more left, if right, turn more right.
+        // This allows us to overshoot our enemy so that we get a good sweep that will not slip.
+        if (radarTurn < 0)
+            radarTurn -= extraTurn;
+        else
+            radarTurn += extraTurn;
+
+        //Turn the radar
+        setTurnRadarRightRadians(radarTurn);
+
+        // Movement code
+        mover.doMovement(e);
+
+        // Targeting
+        doTargeting(e);
     }
 }
