@@ -5,7 +5,6 @@ import robocode.*;
 import robocode.AdvancedRobot;
 import robocode.ScannedRobotEvent;
 import robocode.util.Utils;
-
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 

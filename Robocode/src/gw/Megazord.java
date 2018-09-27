@@ -2,7 +2,6 @@ package gw;
 
 import robocode.*;
 import robocode.util.Utils;
-import java.awt.geom.*;
 import java.util.ArrayList;
 
 import java.util.*;
@@ -90,6 +89,8 @@ public class Megazord extends AdvancedRobot
         {
             waves.add(newWave);
         }
+
+
     }
 
 
