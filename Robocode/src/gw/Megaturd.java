@@ -21,7 +21,9 @@ public class Megaturd extends AdvancedRobot
     public ArrayList _surfDirections;
     public ArrayList _surfAbsBearings;
 
-    // We must keep track of the enemy's energy level to detect EnergyDrop,
+
+
+    // We must keep track f the enemy's energy level to detect EnergyDrop,
 // indicating a bullet is fired
     public static double _oppEnergy = 100.0;
 
@@ -33,11 +35,20 @@ public class Megaturd extends AdvancedRobot
     public static Rectangle2D.Double _fieldRect
             = new java.awt.geom.Rectangle2D.Double(18, 18, 764, 564);
     public static double WALL_STICK = 160;
+    public static Ramfire _rf;
 
-    public void run() {
+    public void run()
+    {
+        setBodyColor(new Color(91, 37, 16));
+        setGunColor(new Color(91, 37, 16));
+        setRadarColor(new Color(91, 37, 16));
+        setBulletColor(new Color(91, 37, 16));
+        setScanColor(new Color(91, 37, 16));
+
         _enemyWaves = new ArrayList();
         _surfDirections = new ArrayList();
         _surfAbsBearings = new ArrayList();
+        _rf = new Ramfire(this);
 
         setAdjustGunForRobotTurn(true);
         setAdjustRadarForGunTurn(true);
@@ -49,6 +60,7 @@ public class Megaturd extends AdvancedRobot
     }
 
     public void onScannedRobot(ScannedRobotEvent e) {
+
         _myLocation = new Point2D.Double(getX(), getY());
 
         double lateralVelocity = getVelocity()*Math.sin(e.getBearingRadians());
@@ -82,9 +94,14 @@ public class Megaturd extends AdvancedRobot
         _enemyLocation = project(_myLocation, absBearing, e.getDistance());
 
         updateWaves();
-        doSurfing();
+
+        if (e.getEnergy() > 10)
+            doSurfing();
+        else
+            _rf.onScannedRobot(e);
 
         // gun code would go here...
+        /*
         double latVel=e.getVelocity() * Math.sin(e.getHeadingRadians() -absBearing);//enemies later velocity
         double gunTurnAmt;//amount to turn our gun
         setTurnRadarLeftRadians(getRadarTurnRemainingRadians());//lock on the radar
@@ -92,7 +109,7 @@ public class Megaturd extends AdvancedRobot
             setMaxVelocity((12*Math.random())+12);//randomly change speed
         }
         if (e.getDistance() > 150) {//if distance is greater than 150
-            gunTurnAmt = robocode.util.Utils.normalRelativeAngle(absBearing- getGunHeadingRadians()+latVel/22);//amount to turn our gun, lead just a little bit
+            gunTurnAmt = robocode.util.Utils.normalRelativeAngle(absBearing- getGunHeadingRadians()+latVel/50);//amount to turn our gun, lead just a little bit
             setTurnGunRightRadians(gunTurnAmt); //turn our gun
             setFire(3);//fire
         }
@@ -101,7 +118,10 @@ public class Megaturd extends AdvancedRobot
             setTurnGunRightRadians(gunTurnAmt);//turn our gun
             setFire(3);//fire
         }
+        */
     }
+
+
 
     public void updateWaves() {
         for (int x = 0; x < _enemyWaves.size(); x++) {
@@ -158,6 +178,15 @@ public class Megaturd extends AdvancedRobot
             // the next one, add 1 / 5; and so on...
             _surfStats[x] += 1.0 / (Math.pow(index - x, 2) + 1);
         }
+    }
+
+
+    public void onBulletHit(BulletHitEvent e) {
+        _rf.onBulletHit(e);
+    }
+
+    public void onHitWall(HitWallEvent e) {
+        _rf.onHitWall(e);
     }
 
     public void onHitByBullet(HitByBulletEvent e) {
